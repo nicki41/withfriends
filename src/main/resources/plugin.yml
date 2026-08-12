@@ -1,5 +1,5 @@
 name: withfriends
-version: '1.0.0'
+version: '1.0.1'
 main: de.withfriends.WithFriendsPlugin
 description: Join/Leave, Tablist, Nametag-Hearts und Sleep-Vote fuer Paper.
 author: Nicki

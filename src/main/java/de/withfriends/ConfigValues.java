@@ -172,6 +172,38 @@ final class ConfigValues {
         return config.getBoolean("enderchest.allow-edit", false);
     }
 
+    String deathChestMode() {
+        return config.getString("death-chest.mode", "always").toLowerCase(Locale.ROOT);
+    }
+
+    int deathChestLavaRadius() {
+        return config.getInt("death-chest.lava-radius", 3);
+    }
+
+    String deathChestPersistence() {
+        return config.getString("death-chest.persistence", "permanent").toLowerCase(Locale.ROOT);
+    }
+
+    int deathChestExpireSeconds() {
+        return config.getInt("death-chest.expire-seconds", 600);
+    }
+
+    int deathChestWarnBeforeExpireSeconds() {
+        return config.getInt("death-chest.warn-before-expire-seconds", 60);
+    }
+
+    boolean deathChestOwnerOnly() {
+        return config.getBoolean("death-chest.owner-only", false);
+    }
+
+    int deathChestSearchRadius() {
+        return config.getInt("death-chest.search-radius", 4);
+    }
+
+    boolean deathChestRemoveWhenEmpty() {
+        return config.getBoolean("death-chest.remove-when-empty", true);
+    }
+
     boolean sitOnlyEmptyHand() {
         return config.getBoolean("sitting.only-empty-hand", true);
     }

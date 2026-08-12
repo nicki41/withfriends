@@ -19,36 +19,43 @@ messages:
     text: "<gray>[</gray><red>-</red><gray>]</gray> <white>{player}"
 
   join-summary:
-    online: "<gray>[</gray><aqua>☷</aqua><gray>]</gray> <gray>Online </gray><white>{count}</white><gray>:</gray> <white>{players}</white>"
-    time: "<gray>[</gray><gold>☀</gold><gray>]</gray> <gray>Day </gray><white>{day}</white><gray>, </gray><white>{time}</white>"
-    deaths: "<gray>[</gray><red>✖</red><gray>]</gray> <gray>Deaths:</gray> <white>{deaths}</white>"
+    online: "<gray>Online:</gray> <white>{count} ({players})</white>"
+    time: "<gray>Day:</gray> <white>{day}, {time}</white>"
+    deaths: "<gray>Deaths:</gray> <white>{deaths}</white>"
 
   death:
-    server: "<gray>[</gray><red>✖</red><gray>]</gray> <white>{player}</white><gray> died.</gray>{location}"
-    player: "<gray>[</gray><red>✖</red><gray>]</gray> <gray>You died.</gray>{location}"
+    server: "<white>{player}</white><gray> died</gray>{location}"
+    player: "<gray>You died.</gray>{location}"
 
   sleep:
-    progress: "<gray>[</gray><aqua>☾</aqua><gray>]</gray> <yellow>{sleeping}/{required}</yellow> <gray>players are sleeping. </gray><yellow>{remaining}</yellow><gray> remaining.</gray>"
-    skipped: "<gray>[</gray><gold>☀</gold><gray>]</gray> <gold>Good morning!</gold> <gray>The night has been skipped.</gray>"
+    progress: "<white>{sleeping}/{required}</white><gray> players are sleeping. </gray><white>{remaining}</white><gray> remaining.</gray>"
+    skipped: "<gray>Good morning! The night has been skipped.</gray>"
 
   afk:
-    now: "<gray>[</gray><yellow>AFK</yellow><gray>]</gray> <white>{player}</white><gray> is now AFK.</gray>"
-    back: "<gray>[</gray><green>AFK</green><gray>]</gray> <white>{player}</white><gray> is back.</gray>"
+    now: "<white>{player}</white><gray> is now AFK.</gray>"
+    back: "<white>{player}</white><gray> is back.</gray>"
 
   playtime: "<gray>Playtime of </gray><white>{player}</white><gray>:</gray> <white>{playtime}</white>"
   seen: "<white>{player}</white><gray> was last seen:</gray> <white>{last-seen}</white>"
   seen-online: "<white>{player}</white><gray> is online right now.</gray>"
-  coords: "<gray>[</gray><aqua>⌖</aqua><gray>]</gray> <white>{player}</white><gray>:</gray> <yellow>{coordinates}</yellow> <dark_gray>({dimension})</dark_gray>"
+  coords: "<white>{player}</white><gray>:</gray> <white>{coordinates}</white> <dark_gray>({dimension})</dark_gray>"
   coords-sent: "<gray>Coordinates sent to </gray><white>{player}</white><gray>.</gray>"
-  distance: "<gray>Distance to </gray><white>{player}</white><gray>:</gray> <yellow>{distance} blocks</yellow>"
+  distance: "<gray>Distance to </gray><white>{player}</white><gray>:</gray> <white>{distance} blocks</white>"
   distance-different-world: "<white>{player}</white><gray> is in another dimension.</gray>"
-  msg-to: "<gray>[</gray><light_purple>msg</light_purple><gray>]</gray> <white>{player}</white><dark_gray>:</dark_gray> "
-  msg-from: "<gray>[</gray><light_purple>msg</light_purple><gray>]</gray> <gray>to </gray><white>{player}</white><dark_gray>:</dark_gray> "
+  msg-to: "<gray>To </gray><white>{player}</white><gray>:</gray> "
+  msg-from: "<gray>From </gray><white>{player}</white><gray>:</gray> "
   command-disabled: "<red>This feature is currently disabled.</red>"
-  player-not-found: "<red>Player </red><white>{player}</white><red> was not found.</red>"
+  player-not-found: "<gray>Player </gray><white>{player}</white><gray> was not found.</gray>"
   reload: "<green>Config reloaded.</green>"
   no-permission: "<red>You do not have permission to do that.</red>"
-  status: "<gray>Online:</gray> <white>{online}</white> <gray>| Sleep mode:</gray> <white>{mode}</white>"
+  status: "<gray>Online:</gray> <white>{online}</white> <dark_gray>|</dark_gray> <gray>Sleep mode:</gray> <white>{mode}</white>"
+
+  death-chest:
+    placed: "<gray>Your items were placed in a chest at </gray><white>{coordinates}</white> <dark_gray>({dimension})</dark_gray>"
+    expired: "<gray>Your death chest at </gray><white>{coordinates}</white><gray> expired, its items dropped on the ground.</gray>"
+    expire-warning: "<gray>Your death chest at </gray><white>{coordinates}</white><gray> will expire in </gray><white>{seconds}s</white><gray>!</gray>"
+    no-space: "<red>No free spot was found for a death chest - your items dropped instead.</red>"
+    locked: "<red>This death chest belongs to </red><white>{player}</white><red> - you may not open it.</red>"
 
 features:
   # Every module can be enabled or disabled independently.
@@ -67,6 +74,7 @@ features:
   custom-chat: true
   sleep: true
   sitting: true
+  death-chest: true
 
 join-summary:
   # Choose which lines a player receives after joining.
@@ -111,7 +119,7 @@ death-messages:
 afk:
   # Seconds without movement, interaction, command or chat before a player is AFK.
   timeout-seconds: 300
-  tab-suffix: " <dark_gray>[AFK]</dark_gray>"
+  tab-suffix: " <gray>[AFK]</gray>"
   announce: true
   # AFK players can be excluded from the sleep vote and protected from damage.
   ignore-for-sleep: true
@@ -139,12 +147,35 @@ sitting:
   # Right-click a slab or stair to sit down.
   only-empty-hand: true
 
+death-chest:
+  # When to place a chest holding a player's dropped items instead of scattering them on the ground.
+  # always: every death gets a chest.
+  # lava-only: a chest is only placed when lava is within "lava-radius" blocks of the death point; otherwise items drop normally like vanilla.
+  mode: always
+  # Only used when mode is "lava-only".
+  lava-radius: 3
+  # How long a placed chest sticks around.
+  # permanent: the chest stays until it is emptied by a player.
+  # timed: the chest is removed automatically after "expire-seconds", dropping any leftover items on the ground.
+  persistence: permanent
+  # Only used when persistence is "timed".
+  expire-seconds: 600
+  # Send the owner a warning this many seconds before a timed chest expires. Use 0 to disable.
+  warn-before-expire-seconds: 60
+  # If true, only the player who died (and admins with withfriends.admin) can open their death chest.
+  owner-only: false
+  # How far (in blocks) to search around the death point for a free spot to place the chest.
+  # A double chest is used automatically if the dropped items don't fit into a single chest (27 slots).
+  search-radius: 4
+  # Remove the chest block automatically once all items have been taken out.
+  remove-when-empty: true
+
 sleep:
   # Only Overworld players are counted. Nether and End players are ignored.
   # percent: A percentage of players must sleep.
   # fixed: The exact player count below must sleep.
   mode: percent
-  percent: 50
+  percent: 75
   fixed-players: 1
   ignore-spectators: true
   # Thunderstorms can be skipped during the day as well as nights.

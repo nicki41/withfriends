@@ -36,6 +36,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -56,7 +57,7 @@ import org.bukkit.scoreboard.RenderType;
 import org.bukkit.scoreboard.Scoreboard;
 
 public final class WithFriendsPlugin extends JavaPlugin implements Listener, TabExecutor {
-    private static final String ADMIN_PERMISSION = "withfriends.admin";
+    static final String ADMIN_PERMISSION = "withfriends.admin";
     private static final DateTimeFormatter SEEN_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             .withZone(ZoneId.systemDefault());
 
@@ -66,6 +67,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
 
     private ConfigValues configValues;
     private PlayerDataStore playerData;
+    private DeathChestManager deathChestManager;
     private Scoreboard scoreboard;
     private BukkitTask tablistTask;
     private BukkitTask afkTask;
@@ -79,6 +81,8 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         } catch (IllegalStateException exception) {
             getLogger().warning(exception.getMessage() + "; starting with an empty player cache.");
         }
+        deathChestManager = new DeathChestManager(this);
+        deathChestManager.load();
         reloadWithFriends();
 
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -99,6 +103,11 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         seats.clear();
         playerData.closeSessions();
         savePlayerData();
+        deathChestManager.save();
+    }
+
+    ConfigValues configValues() {
+        return configValues;
     }
 
     private void registerCommands() {
@@ -269,36 +278,39 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
-        if (!configValues.enabled("deaths")) {
-            return;
-        }
         Player player = event.getEntity();
-        int deaths = playerData.incrementDeaths(player);
-        updateDeathScore(player);
-        savePlayerData();
 
-        if (!configValues.enabled("death-messages")) {
-            return;
+        if (configValues.enabled("deaths")) {
+            int deaths = playerData.incrementDeaths(player);
+            updateDeathScore(player);
+            savePlayerData();
+
+            if (configValues.enabled("death-messages")) {
+                event.deathMessage(null);
+                Map<String, String> placeholders = locationPlaceholders(player.getLocation());
+                placeholders.put("player", player.getName());
+                placeholders.put("deaths", String.valueOf(deaths));
+                placeholders.put("location", deathLocationSuffix(placeholders));
+                String messagePath = getConfig().getString("death-messages.scope", "server").equalsIgnoreCase("player")
+                        ? "messages.death.player" : "messages.death.server";
+                Component message = configValues.message(messagePath,
+                        "<gray>[</gray><red>✖</red><gray>]</gray> <white>{player}</white><gray> died.</gray>{location}",
+                        placeholders, false)
+                        ;
+                if (configValues.deathClickToCopy() && configValues.deathShowCoordinates()) {
+                    message = message.clickEvent(ClickEvent.copyToClipboard(placeholders.get("coordinates")))
+                            .hoverEvent(HoverEvent.showText(Component.text("Click to copy coordinates")));
+                }
+                if (getConfig().getString("death-messages.scope", "server").equalsIgnoreCase("player")) {
+                    player.sendMessage(message);
+                } else {
+                    Bukkit.broadcast(message);
+                }
+            }
         }
-        event.deathMessage(null);
-        Map<String, String> placeholders = locationPlaceholders(player.getLocation());
-        placeholders.put("player", player.getName());
-        placeholders.put("deaths", String.valueOf(deaths));
-        placeholders.put("location", deathLocationSuffix(placeholders));
-        String messagePath = getConfig().getString("death-messages.scope", "server").equalsIgnoreCase("player")
-                ? "messages.death.player" : "messages.death.server";
-        Component message = configValues.message(messagePath,
-                "<gray>[</gray><red>✖</red><gray>]</gray> <white>{player}</white><gray> died.</gray>{location}",
-                placeholders, false)
-                ;
-        if (configValues.deathClickToCopy() && configValues.deathShowCoordinates()) {
-            message = message.clickEvent(ClickEvent.copyToClipboard(placeholders.get("coordinates")))
-                    .hoverEvent(HoverEvent.showText(Component.text("Click to copy coordinates")));
-        }
-        if (getConfig().getString("death-messages.scope", "server").equalsIgnoreCase("player")) {
-            player.sendMessage(message);
-        } else {
-            Bukkit.broadcast(message);
+
+        if (configValues.enabled("death-chest")) {
+            deathChestManager.handleDeath(event);
         }
     }
 
@@ -497,7 +509,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
 
     private Component renderChatSection(String section, Component world) {
         Component result = Component.empty();
-        String[] segments = section.split("\\\\{world}", -1);
+        String[] segments = section.split("\\{world\\}", -1);
         for (int index = 0; index < segments.length; index++) {
             result = result.append(configValues.format(segments[index]));
             if (index < segments.length - 1) {
@@ -584,6 +596,20 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         Player owner = Bukkit.getPlayer(viewer.ownerId());
         if (owner != null) {
             owner.getEnderChest().setContents(event.getInventory().getContents());
+        }
+    }
+
+    @EventHandler
+    public void onDeathChestOpen(InventoryOpenEvent event) {
+        if (configValues.enabled("death-chest")) {
+            deathChestManager.onInventoryOpen(event);
+        }
+    }
+
+    @EventHandler
+    public void onDeathChestClose(InventoryCloseEvent event) {
+        if (configValues.enabled("death-chest")) {
+            deathChestManager.onInventoryClose(event);
         }
     }
 
@@ -766,7 +792,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         }
         if (configValues.joinSummaryOnline()) {
             player.sendMessage(configValues.message("messages.join-summary.online", "<gray>Online </gray><white>{count}</white><gray>:</gray> <white>{players}</white>",
-                    Map.of("count", String.valueOf(Bukkit.getOnlinePlayers().size()), "players", online)));
+                    Map.of("count", String.valueOf(Bukkit.getOnlinePlayers().size()), "players", online), false));
         }
         long time = player.getWorld().getTime();
         int hour = (int) ((time / 1000 + 6) % 24);
@@ -774,11 +800,11 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         long day = player.getWorld().getFullTime() / 24000 + 1;
         if (configValues.joinSummaryTime()) {
             player.sendMessage(configValues.message("messages.join-summary.time", "<gray>Day </gray><white>{day}</white><gray>, </gray><white>{time}</white>",
-                    Map.of("day", String.valueOf(day), "time", String.format(Locale.ROOT, "%02d:%02d", hour, minute))));
+                    Map.of("day", String.valueOf(day), "time", String.format(Locale.ROOT, "%02d:%02d", hour, minute)), false));
         }
         if (configValues.joinSummaryDeaths()) {
             player.sendMessage(configValues.message("messages.join-summary.deaths", "<gray>Deaths:</gray> <white>{deaths}</white>",
-                    Map.of("deaths", String.valueOf(playerData.deaths(player.getUniqueId())))));
+                    Map.of("deaths", String.valueOf(playerData.deaths(player.getUniqueId()))), false));
         }
     }
 
