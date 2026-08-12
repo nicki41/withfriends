@@ -1,84 +1,156 @@
 <p align="center">
-  <img src="assets/withfriends-logo.svg" width="140" alt="withfriends logo">
+  <img src="https://github.com/nicki41/withfriends/raw/master/assets/withfriends-logo.svg" alt="withfriends logo" width="140">
 </p>
 
-<h1 align="center">withfriends</h1>
+**withfriends** is a lightweight and fully configurable quality-of-life plugin designed for small and community-focused Minecraft servers. It enhances Minecraft with useful social features, clear player information, a flexible sleep system, and many other convenient additions.
 
-<p align="center">A clean, configurable social-quality-of-life plugin for Paper 26.2 servers.</p>
+Every module can be enabled or disabled independently in the `config.yml`.
 
-## Features
+## ✨ Features
 
-- Clean join and leave messages plus a personal join summary with online players, in-game day/time, and deaths.
-- Name-tag health hearts, world prefixes in the tab list, and JSON-backed deaths in the tab list, sidebar, or both.
-- Configurable death messages with scope, dimension, clickable coordinates, and clipboard copying.
-- AFK marking in the tab list, sleep-vote exclusion, damage immunity, and knockback immunity.
-- `/playtime`, `/seen`, `/coords`, `/distance`, formatted `/msg`, and a configurable Ender Chest preview.
-- Optional chat format with world prefix and hover details for deaths and playtime.
-- Flexible sleep vote: percentage or fixed count, thunderstorm skipping, phantom reset, and a particle/sound skip effect.
-- Sit on slabs and stairs with an empty hand.
-- Death chests: dropped items are placed in a chest instead of scattering, with configurable trigger (always/lava-only), persistence (permanent/timed with an expiry warning), owner-only access, and automatic double chests for large inventories.
+### Player Information
 
-Every feature has an independent switch in `config.yml`.
+* Clean and customizable join and leave messages
+* Personal join summary showing:
 
-## Requirements
+  * currently online players
+  * the current in-game day and time
+  * your death count
+* Player health displayed above name tags
+* World prefixes in the player list
+* Death counts in the player list, scoreboard, or both
+* Persistent tracking of playtime, deaths, and player activity
 
-- Paper `26.2`
-- Java `25`
+### Communication and Coordinates
 
-## Installation
+* Formatted private messages using `/msg`
+* View your own or another player's playtime with `/playtime`
+* Check when a player was last online with `/seen`
+* Broadcast your coordinates or send them privately
+* Display the distance to another player in the same dimension
+* Optional chat formatting with world prefixes
+* Hover information for deaths and playtime
+* Clickable coordinates in death messages with clipboard support
 
-1. Download `withfriends-1.0.1.jar` from the release or build it yourself.
-2. Put the JAR into the server's `plugins` directory.
-3. Start the server once. The configuration is created at `plugins/withfriends/config.yml`.
-4. Adjust the configuration and run `/withfriends reload`, or restart the server.
+### AFK System
 
-## Commands
+AFK players are automatically detected and can be:
 
-| Command | Description |
-| --- | --- |
-| `/withfriends reload` | Reload the plugin configuration. |
-| `/withfriends status` | Show online player count and sleep mode. |
-| `/playtime [player]` | Show your own or another player's playtime. |
-| `/seen <player>` | Show when a player was last online. |
-| `/coords [player]` | Broadcast your coordinates or send them privately. |
-| `/distance <player>` | Show distance to a player in the same dimension. |
-| `/msg <player> <message>` | Send a formatted private message. |
-| `/enderchest` or `/ec` | Open your Ender Chest preview. |
+* marked in the player list
+* excluded from sleep votes
+* protected from damage
+* protected from knockback
 
-`/withfriends reload` and `/withfriends status` require `withfriends.admin` (default: OP). Other commands use Paper's normal command permissions and can be disabled in the config.
+### Flexible Sleep System
 
-## Configuration
+* Sleep voting based on a percentage or fixed player count
+* Automatic exclusion of AFK players
+* Thunderstorm skipping
+* Phantom timer reset
+* Particle and sound effects when the night is skipped
 
-The default [config.yml](src/main/resources/config.yml) is extensively commented and uses [MiniMessage](https://docs.advntr.dev/minimessage/format.html) for all text formatting.
+### Death Chests
 
-Useful toggles:
+* Dropped items are placed in a chest instead of scattering on death
+* Configurable trigger: always create a chest, or only when lava is nearby
+* Configurable persistence: permanent chests, or timed chests that expire with an advance warning
+* Optional owner-only access so only the player who died (and admins) can open it
+* Automatic double chests when an inventory doesn't fit into a single chest
+* Chests are removed automatically once emptied
 
-- `features`: enable or disable each module independently.
-- `deaths.display`: `tablist`, `scoreboard`, `both`, or `none`.
-- `death-messages.scope`: `server` or `player`.
-- `enderchest.allow-edit`: keep the Ender Chest read-only or allow editing.
-- `sleep.mode`: `percent` or `fixed`.
-- `death-chest.mode`: `always` or `lava-only`.
-- `death-chest.persistence`: `permanent` or `timed`.
+### Additional Quality-of-Life Features
 
-## Player data
+* Sit on slabs and stairs with an empty hand
+* Open your Ender Chest with `/enderchest` or `/ec`
+* Configure the Ender Chest as read-only or editable
+* Fully customizable text formatting using [MiniMessage](https://docs.advntr.dev/minimessage/format.html)
 
-Deaths, playtime, last join, and last seen timestamps are saved by UUID in `plugins/withfriends/players.json`. The file is human-readable JSON and survives name changes.
+## 📋 Commands
 
-Active death chests (location, owner, and expiry time) are saved in `plugins/withfriends/deathchests.json` so timed expiry and owner-only locks survive a server restart.
+| Command                   | Description                                          |
+| ------------------------- | ---------------------------------------------------- |
+| `/withfriends reload`     | Reloads the plugin configuration                     |
+| `/withfriends status`     | Shows the online player count and active sleep mode  |
+| `/playtime [player]`      | Shows your own or another player's playtime          |
+| `/seen <player>`          | Shows when a player was last online                  |
+| `/coords [player]`        | Broadcasts coordinates or sends them privately       |
+| `/distance <player>`      | Shows the distance to a player in the same dimension |
+| `/msg <player> <message>` | Sends a formatted private message                    |
+| `/enderchest`             | Opens your Ender Chest                               |
+| `/ec`                     | Shortcut for `/enderchest`                           |
 
-## Building
+The `/withfriends reload` and `/withfriends status` commands require the `withfriends.admin` permission, which is granted to server operators by default.
 
-```powershell
-mvn package
+## ⚙️ Configuration
+
+All features can be configured independently. The generated `config.yml` contains detailed comments and examples.
+
+Available settings include:
+
+* enabling or disabling individual modules
+* death count display location
+* death message visibility
+* death chest trigger (always / lava-only) and persistence (permanent / timed)
+* formatting for all plugin messages
+* Ender Chest editing permissions
+* percentage-based or fixed sleep voting
+* AFK protection
+* chat and player-list formatting
+
+After making changes, reload the configuration with `/withfriends reload`.
+
+## 📦 Installation
+
+1. Download the latest JAR file.
+2. Place it inside your server's `plugins` directory.
+3. Start or restart the server.
+4. Adjust `plugins/withfriends/config.yml` if needed.
+5. Run `/withfriends reload` or restart the server again.
+
+## ✅ Requirements
+
+* **Minecraft:** Java Edition 26.2
+* **Server software:** Paper
+* **Java:** 25
+
+## 💾 Player Data
+
+Death counts, playtime, last join times, and last-seen timestamps are stored by UUID.
+
+The data is saved in:
+
+```text
+plugins/withfriends/players.json
 ```
 
-The compiled plugin is written to `target/withfriends-1.0.1.jar`.
+The human-readable JSON format keeps player data correctly assigned even when a player changes their username.
 
-## Compatibility
+Active death chests (location, owner, and expiry time) are stored the same way in:
 
-Another plugin may already provide commands such as `/msg` or `/ec`. In that case, use the namespaced version such as `/withfriends:msg` or adjust the conflicting plugin.
+```text
+plugins/withfriends/deathchests.json
+```
 
-## License
+so timed expiry and owner-only locks survive a server restart.
 
-Distributed under the [GNU General Public License v3.0](LICENSE).
+## ⚠️ Compatibility
+
+Other plugins may already provide commands such as `/msg` or `/ec`. If a conflict occurs, use the namespaced command instead:
+
+```text
+/withfriends:msg
+/withfriends:ec
+```
+
+## 💡 Feature Requests
+
+New ideas and feature requests are always very welcome! If you have a suggestion for improving **withfriends**, feel free to [open an issue](https://github.com/nicki41/withfriends/issues) and share it.
+
+## 🔗 Links
+
+* [Source code on GitHub](https://github.com/nicki41/withfriends)
+* [Report an issue or suggest a feature](https://github.com/nicki41/withfriends/issues)
+
+## 📜 License
+
+**withfriends** is free and open-source software distributed under the [GNU General Public License v3.0](https://github.com/nicki41/withfriends/blob/master/LICENSE).
