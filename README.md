@@ -76,4 +76,4 @@ Another plugin may already provide commands such as `/msg` or `/ec`. In that cas
 
 ## License
 
-Distributed under the [MIT License](LICENSE).
+Distributed under the [GNU General Public License v3.0](LICENSE).
