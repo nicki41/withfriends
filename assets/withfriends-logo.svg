@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">withfriends</title>
+  <desc id="desc">A green heart framed by gray square brackets.</desc>
+  <rect width="512" height="512" rx="96" fill="#171a1f"/>
+  <path d="M154 142H104v228h50v-28h-22V170h22zm204 0v28h22v172h-22v28h50V142z" fill="#a7adb7"/>
+  <path d="M256 356 176 280c-47-45-15-124 49-113 14 2 24 9 31 20 7-11 17-18 31-20 64-11 96 68 49 113z" fill="#57c58a"/>
+</svg>

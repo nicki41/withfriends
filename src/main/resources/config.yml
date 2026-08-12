@@ -1,0 +1,158 @@
+# ============================================================================
+# withfriends configuration
+# All messages use MiniMessage formatting:
+# https://docs.advntr.dev/minimessage/format.html
+# ============================================================================
+
+messages:
+  # Added before admin, command and sleep messages.
+  prefix: "<gray>[<green>withfriends</green>]</gray> "
+
+  join:
+    # Replace Minecraft's default join message.
+    enabled: true
+    text: "<gray>[</gray><green>+</green><gray>]</gray> <white>{player}"
+
+  leave:
+    # Replace Minecraft's default leave message.
+    enabled: true
+    text: "<gray>[</gray><red>-</red><gray>]</gray> <white>{player}"
+
+  join-summary:
+    online: "<gray>[</gray><aqua>☷</aqua><gray>]</gray> <gray>Online </gray><white>{count}</white><gray>:</gray> <white>{players}</white>"
+    time: "<gray>[</gray><gold>☀</gold><gray>]</gray> <gray>Day </gray><white>{day}</white><gray>, </gray><white>{time}</white>"
+    deaths: "<gray>[</gray><red>✖</red><gray>]</gray> <gray>Deaths:</gray> <white>{deaths}</white>"
+
+  death:
+    server: "<gray>[</gray><red>✖</red><gray>]</gray> <white>{player}</white><gray> died.</gray>{location}"
+    player: "<gray>[</gray><red>✖</red><gray>]</gray> <gray>You died.</gray>{location}"
+
+  sleep:
+    progress: "<gray>[</gray><aqua>☾</aqua><gray>]</gray> <yellow>{sleeping}/{required}</yellow> <gray>players are sleeping. </gray><yellow>{remaining}</yellow><gray> remaining.</gray>"
+    skipped: "<gray>[</gray><gold>☀</gold><gray>]</gray> <gold>Good morning!</gold> <gray>The night has been skipped.</gray>"
+
+  afk:
+    now: "<gray>[</gray><yellow>AFK</yellow><gray>]</gray> <white>{player}</white><gray> is now AFK.</gray>"
+    back: "<gray>[</gray><green>AFK</green><gray>]</gray> <white>{player}</white><gray> is back.</gray>"
+
+  playtime: "<gray>Playtime of </gray><white>{player}</white><gray>:</gray> <white>{playtime}</white>"
+  seen: "<white>{player}</white><gray> was last seen:</gray> <white>{last-seen}</white>"
+  seen-online: "<white>{player}</white><gray> is online right now.</gray>"
+  coords: "<gray>[</gray><aqua>⌖</aqua><gray>]</gray> <white>{player}</white><gray>:</gray> <yellow>{coordinates}</yellow> <dark_gray>({dimension})</dark_gray>"
+  coords-sent: "<gray>Coordinates sent to </gray><white>{player}</white><gray>.</gray>"
+  distance: "<gray>Distance to </gray><white>{player}</white><gray>:</gray> <yellow>{distance} blocks</yellow>"
+  distance-different-world: "<white>{player}</white><gray> is in another dimension.</gray>"
+  msg-to: "<gray>[</gray><light_purple>msg</light_purple><gray>]</gray> <white>{player}</white><dark_gray>:</dark_gray> "
+  msg-from: "<gray>[</gray><light_purple>msg</light_purple><gray>]</gray> <gray>to </gray><white>{player}</white><dark_gray>:</dark_gray> "
+  command-disabled: "<red>This feature is currently disabled.</red>"
+  player-not-found: "<red>Player </red><white>{player}</white><red> was not found.</red>"
+  reload: "<green>Config reloaded.</green>"
+  no-permission: "<red>You do not have permission to do that.</red>"
+  status: "<gray>Online:</gray> <white>{online}</white> <gray>| Sleep mode:</gray> <white>{mode}</white>"
+
+features:
+  # Every module can be enabled or disabled independently.
+  nametag-hearts: true
+  tablist-world-prefix: true
+  deaths: true
+  death-messages: true
+  join-summary: true
+  afk: true
+  playtime-command: true
+  seen-command: true
+  coords-command: true
+  distance-command: true
+  private-messages: true
+  enderchest: true
+  custom-chat: true
+  sleep: true
+  sitting: true
+
+join-summary:
+  # Choose which lines a player receives after joining.
+  show-online: true
+  show-time: true
+  show-deaths: true
+  # Show at most this many names, then append "+x". Use 0 for count only.
+  max-player-names: 20
+
+tablist:
+  # How often world prefixes and AFK suffixes are refreshed, in seconds.
+  update-interval-seconds: 5
+  world-prefixes:
+    overworld: "<green><gray>[</gray>Overworld<gray>]</gray></green> "
+    nether: "<red><gray>[</gray>Nether<gray>]</gray></red> "
+    end: "<light_purple><gray>[</gray>End<gray>]</gray></light_purple> "
+    custom: "<white><gray>[{world}]</gray></white> "
+
+nametag:
+  # Objective names must be short and unique server-wide.
+  hearts-objective-name: wf_health
+  hearts-display-name: "<red>❤</red>"
+
+deaths:
+  # The death count is stored per UUID in plugins/withfriends/players.json.
+  enabled: true
+  # Display mode: tablist, scoreboard, both, or none.
+  display: tablist
+  # "both" needs two objectives because Minecraft can only show an objective once.
+  tablist-objective-name: wf_deaths_tab
+  scoreboard-objective-name: wf_deaths_sb
+  display-name: "<gray>Deaths</gray>"
+
+death-messages:
+  # server sends the message to everyone; player sends it only to the player who died.
+  scope: server
+  show-coordinates: true
+  show-dimension: true
+  # When coordinates are shown, clicking the death message copies them.
+  click-to-copy: true
+
+afk:
+  # Seconds without movement, interaction, command or chat before a player is AFK.
+  timeout-seconds: 300
+  tab-suffix: " <dark_gray>[AFK]</dark_gray>"
+  announce: true
+  # AFK players can be excluded from the sleep vote and protected from damage.
+  ignore-for-sleep: true
+  damage-immunity: true
+  knockback-immunity: true
+
+chat:
+  # Use {player} exactly once. {world} can be placed anywhere or removed.
+  format: "{world}<white>{player}</white><dark_gray>:</dark_gray> "
+  show-world: true
+  world-prefixes:
+    overworld: "<green><gray>[</gray>Overworld<gray>]</gray></green> "
+    nether: "<red><gray>[</gray>Nether<gray>]</gray></red> "
+    end: "<light_purple><gray>[</gray>End<gray>]</gray></light_purple> "
+    custom: "<gray>[{world}]</gray> "
+  # Shown only when hovering over a player name in chat.
+  player-hover: "<gray>Deaths:</gray> <white>{deaths}</white><newline><gray>Playtime:</gray> <white>{playtime}</white>"
+
+enderchest:
+  # false opens a read-only preview. true writes changes back when it is closed.
+  allow-edit: false
+  title: "<dark_gray>Ender Chest: </dark_gray><white>{player}</white>"
+
+sitting:
+  # Right-click a slab or stair to sit down.
+  only-empty-hand: true
+
+sleep:
+  # Only Overworld players are counted. Nether and End players are ignored.
+  # percent: A percentage of players must sleep.
+  # fixed: The exact player count below must sleep.
+  mode: percent
+  percent: 50
+  fixed-players: 1
+  ignore-spectators: true
+  # Thunderstorms can be skipped during the day as well as nights.
+  clear-weather: true
+  announce-progress: true
+  announce-success: true
+  # Phantom reset mode: sleeping, all, or none.
+  phantom-reset: sleeping
+  skip-animation:
+    enabled: true
+    particles: 30

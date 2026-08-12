@@ -1,0 +1,35 @@
+name: withfriends
+version: '1.0.0'
+main: de.withfriends.WithFriendsPlugin
+description: Join/Leave, Tablist, Nametag-Hearts und Sleep-Vote fuer Paper.
+author: Nicki
+api-version: '26.2'
+commands:
+  withfriends:
+    description: withfriends Verwaltung
+    usage: /withfriends <reload|status>
+    aliases: [wf]
+  playtime:
+    description: Show your or another player's playtime.
+    usage: /playtime [player]
+  seen:
+    description: Show when a player was last online.
+    usage: /seen <player>
+  coords:
+    description: Share your coordinates.
+    usage: /coords [player]
+  distance:
+    description: Show your distance to a player.
+    usage: /distance <player>
+  msg:
+    description: Send a private message.
+    usage: /msg <player> <message>
+    aliases: [tell, whisper]
+  enderchest:
+    description: Open your Ender Chest.
+    usage: /enderchest
+    aliases: [ec]
+permissions:
+  withfriends.admin:
+    description: Erlaubt /withfriends reload und /withfriends status.
+    default: op
