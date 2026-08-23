@@ -40,7 +40,7 @@ distance-different-world: "<white>{player}</white><gray> ist in einer anderen Di
 
 # Wird dem Sender und dem Empfaenger eines /msg identisch angezeigt. {world} nutzt denselben
 # farbigen Tag wie Tabliste, Chat und /coords.
-msg: "{world}<gray>[</gray><white>{sender}</white><gray> -> </gray><white>{recipient}</white><gray>]</gray> "
+msg: "{world}<gray>[</gray><white>{sender}</white><gray> -> </gray><white>{recipient}</white><gray>]</gray><dark_gray>:</dark_gray> "
 
 command-disabled: "<red>Diese Funktion ist derzeit deaktiviert.</red>"
 player-not-found: "<gray>Spieler </gray><white>{player}</white><gray> wurde nicht gefunden.</gray>"

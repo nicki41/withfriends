@@ -242,7 +242,7 @@ final class ConfigValues {
     }
 
     String chatFormat() {
-        return settings.getString("chat.format", "{world}<white>{player}</white><dark_gray>:</dark_gray> ");
+        return settings.getString("chat.format", "{world}<white>{player}<dark_gray>:</dark_gray> ");
     }
 
     Component chatWorldPrefix(String worldKey, String rawWorldName) {

@@ -93,7 +93,7 @@ afk:
 
 chat:
   # Use {player} exactly once. {world} can be placed anywhere or removed.
-  format: "{world}<white>{player}</white><dark_gray>:</dark_gray> "
+  format: "{world}<white>{player}<dark_gray>:</dark_gray> "
   # Uses the world-prefixes tags above.
   show-world: true
 

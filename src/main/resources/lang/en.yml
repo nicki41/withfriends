@@ -40,7 +40,7 @@ distance-different-world: "<white>{player}</white><gray> is in another dimension
 
 # Shown identically to both the sender and the recipient of a /msg. {world} uses the same colored
 # tag as the tab list, chat and /coords.
-msg: "{world}<gray>[</gray><white>{sender}</white><gray> -> </gray><white>{recipient}</white><gray>]</gray> "
+msg: "{world}<gray>[</gray><white>{sender}</white><gray> -> </gray><white>{recipient}</white><gray>]</gray><dark_gray>:</dark_gray> "
 
 command-disabled: "<red>This feature is currently disabled.</red>"
 player-not-found: "<gray>Player </gray><white>{player}</white><gray> was not found.</gray>"

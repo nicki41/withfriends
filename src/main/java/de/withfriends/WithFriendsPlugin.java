@@ -62,11 +62,15 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.RenderType;
 import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 public final class WithFriendsPlugin extends JavaPlugin implements Listener, TabExecutor {
     static final String ADMIN_PERMISSION = "withfriends.admin";
     private static final DateTimeFormatter SEEN_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             .withZone(ZoneId.systemDefault());
+    // Player-vs-player pushing is predicted client-side from the scoreboard team collision rule -
+    // Entity#setCollidable alone does not stop players from shoving an AFK player around.
+    private static final String AFK_NOCOLLIDE_TEAM = "wf_afk_nocollide";
 
     private final Map<UUID, Long> lastActivity = new HashMap<>();
     private final Map<UUID, ArmorStand> seats = new HashMap<>();
@@ -165,12 +169,32 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
     private void syncAfkCollidable() {
         boolean immunityEnabled = configValues.enabled("afk") && configValues.afkCollisionImmunity();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            player.setCollidable(!(immunityEnabled && isAfk(player)));
+            boolean immune = immunityEnabled && isAfk(player);
+            player.setCollidable(!immune);
+            setAfkCollisionTeamMembership(player, immune);
+        }
+    }
+
+    private void setAfkCollisionTeamMembership(Player player, boolean immune) {
+        Team afkTeam = scoreboard.getTeam(AFK_NOCOLLIDE_TEAM);
+        if (afkTeam == null) {
+            return;
+        }
+        if (immune) {
+            afkTeam.addEntry(player.getName());
+        } else {
+            afkTeam.removeEntry(player.getName());
         }
     }
 
     private void setupScoreboard() {
         scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+
+        Team afkTeam = scoreboard.getTeam(AFK_NOCOLLIDE_TEAM);
+        if (afkTeam == null) {
+            afkTeam = scoreboard.registerNewTeam(AFK_NOCOLLIDE_TEAM);
+        }
+        afkTeam.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
 
         if (configValues.nametagHeartsEnabled()) {
             Objective hearts = getOrCreateObjective(configValues.heartsObjectiveName(), Criteria.HEALTH,
@@ -309,6 +333,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         savePlayerData();
         lastActivity.remove(player.getUniqueId());
         afkPlayers.remove(player.getUniqueId());
+        setAfkCollisionTeamMembership(player, false);
         Bukkit.getScheduler().runTaskLater(this, this::checkSleep, 1L);
     }
 
@@ -576,6 +601,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         updateTabName(player);
         if (configValues.enabled("afk") && configValues.afkCollisionImmunity()) {
             player.setCollidable(!afk);
+            setAfkCollisionTeamMembership(player, afk);
         }
         if (!configValues.afkAnnouncements()) {
             return;
@@ -816,14 +842,12 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
                 "sender", player.getName(),
                 "recipient", target.getName()
         );
-        // Shown identically to both sides: [world] [sender -> recipient] "message" - same world tag
+        // Shown identically to both sides: [world][sender -> recipient]: message - same world tag
         // style as the tab list, chat and /coords.
         Component full = configValues.message("msg",
-                "{world}<gray>[</gray><white>{sender}</white><gray> -> </gray><white>{recipient}</white><gray>]</gray> ",
+                "{world}<gray>[</gray><white>{sender}</white><gray> -> </gray><white>{recipient}</white><gray>]</gray><dark_gray>:</dark_gray> ",
                 placeholders, false)
-                .append(Component.text("\""))
-                .append(content)
-                .append(Component.text("\""));
+                .append(content);
         target.sendMessage(full);
         player.sendMessage(full);
         return true;
