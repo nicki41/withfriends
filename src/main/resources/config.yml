@@ -1,61 +1,22 @@
 # ============================================================================
 # withfriends configuration
-# All messages use MiniMessage formatting:
+# All display text lives in the language files under lang/ (en.yml, de.yml),
+# selected below with general.language. This file only holds behavior and
+# formatting settings. Both use MiniMessage formatting:
 # https://docs.advntr.dev/minimessage/format.html
 # ============================================================================
 
-messages:
-  # Added before admin, command and sleep messages.
-  prefix: "<gray>[<green>withfriends</green>]</gray> "
+general:
+  # Language for all plugin messages. Available: en, de.
+  language: en
 
-  join:
-    # Replace Minecraft's default join message.
-    enabled: true
-    text: "<gray>[</gray><green>+</green><gray>]</gray> <white>{player}"
+join:
+  # Replace Minecraft's default join message.
+  enabled: true
 
-  leave:
-    # Replace Minecraft's default leave message.
-    enabled: true
-    text: "<gray>[</gray><red>-</red><gray>]</gray> <white>{player}"
-
-  join-summary:
-    online: "<gray>Online:</gray> <white>{count} ({players})</white>"
-    time: "<gray>Day:</gray> <white>{day}, {time}</white>"
-    deaths: "<gray>Deaths:</gray> <white>{deaths}</white>"
-
-  death:
-    server: "<white>{player}</white><gray> died</gray>{location}"
-    player: "<gray>You died.</gray>{location}"
-
-  sleep:
-    progress: "<white>{sleeping}/{required}</white><gray> players are sleeping. </gray><white>{remaining}</white><gray> remaining.</gray>"
-    skipped: "<gray>Good morning! The night has been skipped.</gray>"
-
-  afk:
-    now: "<white>{player}</white><gray> is now AFK.</gray>"
-    back: "<white>{player}</white><gray> is back.</gray>"
-
-  playtime: "<gray>Playtime of </gray><white>{player}</white><gray>:</gray> <white>{playtime}</white>"
-  seen: "<white>{player}</white><gray> was last seen:</gray> <white>{last-seen}</white>"
-  seen-online: "<white>{player}</white><gray> is online right now.</gray>"
-  coords: "<white>{player}</white><gray>:</gray> <white>{coordinates}</white> <dark_gray>({dimension})</dark_gray>"
-  coords-sent: "<gray>Coordinates sent to </gray><white>{player}</white><gray>.</gray>"
-  distance: "<gray>Distance to </gray><white>{player}</white><gray>:</gray> <white>{distance} blocks</white>"
-  distance-different-world: "<white>{player}</white><gray> is in another dimension.</gray>"
-  msg-to: "<gray>To </gray><white>{player}</white><gray>:</gray> "
-  msg-from: "<gray>From </gray><white>{player}</white><gray>:</gray> "
-  command-disabled: "<red>This feature is currently disabled.</red>"
-  player-not-found: "<gray>Player </gray><white>{player}</white><gray> was not found.</gray>"
-  reload: "<green>Config reloaded.</green>"
-  no-permission: "<red>You do not have permission to do that.</red>"
-  status: "<gray>Online:</gray> <white>{online}</white> <dark_gray>|</dark_gray> <gray>Sleep mode:</gray> <white>{mode}</white>"
-
-  death-chest:
-    placed: "<gray>Your items were placed in a chest at </gray><white>{coordinates}</white> <dark_gray>({dimension})</dark_gray>"
-    expired: "<gray>Your death chest at </gray><white>{coordinates}</white><gray> expired, its items dropped on the ground.</gray>"
-    expire-warning: "<gray>Your death chest at </gray><white>{coordinates}</white><gray> will expire in </gray><white>{seconds}s</white><gray>!</gray>"
-    no-space: "<red>No free spot was found for a death chest - your items dropped instead.</red>"
-    locked: "<red>This death chest belongs to </red><white>{player}</white><red> - you may not open it.</red>"
+leave:
+  # Replace Minecraft's default leave message.
+  enabled: true
 
 features:
   # Every module can be enabled or disabled independently.
@@ -87,11 +48,15 @@ join-summary:
 tablist:
   # How often world prefixes and AFK suffixes are refreshed, in seconds.
   update-interval-seconds: 5
-  world-prefixes:
-    overworld: "<green><gray>[</gray>Overworld<gray>]</gray></green> "
-    nether: "<red><gray>[</gray>Nether<gray>]</gray></red> "
-    end: "<light_purple><gray>[</gray>End<gray>]</gray></light_purple> "
-    custom: "<white><gray>[{world}]</gray></white> "
+
+# This single set of colored, bracketed world tags is used everywhere a world/dimension is shown:
+# the tab list, chat, /coords, /msg, and death (chest) messages - so it always looks the same.
+# {world} is replaced with the translated world name from the language file.
+world-prefixes:
+  overworld: "<green><gray>[</gray>{world}<gray>]</gray></green> "
+  nether: "<red><gray>[</gray>{world}<gray>]</gray></red> "
+  end: "<light_purple><gray>[</gray>{world}<gray>]</gray></light_purple> "
+  custom: "<white><gray>[{world}]</gray></white> "
 
 nametag:
   # Objective names must be short and unique server-wide.
@@ -106,7 +71,6 @@ deaths:
   # "both" needs two objectives because Minecraft can only show an objective once.
   tablist-objective-name: wf_deaths_tab
   scoreboard-objective-name: wf_deaths_sb
-  display-name: "<gray>Deaths</gray>"
 
 death-messages:
   # server sends the message to everyone; player sends it only to the player who died.
@@ -119,29 +83,24 @@ death-messages:
 afk:
   # Seconds without movement, interaction, command or chat before a player is AFK.
   timeout-seconds: 300
-  tab-suffix: " <gray>[AFK]</gray>"
   announce: true
   # AFK players can be excluded from the sleep vote and protected from damage.
   ignore-for-sleep: true
   damage-immunity: true
   knockback-immunity: true
+  # Prevents AFK players from being pushed around by mob or player collision.
+  collision-immunity: true
 
 chat:
   # Use {player} exactly once. {world} can be placed anywhere or removed.
   format: "{world}<white>{player}</white><dark_gray>:</dark_gray> "
+  # Uses the world-prefixes tags above.
   show-world: true
-  world-prefixes:
-    overworld: "<green><gray>[</gray>Overworld<gray>]</gray></green> "
-    nether: "<red><gray>[</gray>Nether<gray>]</gray></red> "
-    end: "<light_purple><gray>[</gray>End<gray>]</gray></light_purple> "
-    custom: "<gray>[{world}]</gray> "
-  # Shown only when hovering over a player name in chat.
-  player-hover: "<gray>Deaths:</gray> <white>{deaths}</white><newline><gray>Playtime:</gray> <white>{playtime}</white>"
 
 enderchest:
-  # false opens a read-only preview. true writes changes back when it is closed.
+  # false opens a read-only preview of your own chest. true lets you edit and save it.
+  # Someone else's chest (/enderchest <player>) is always read-only, regardless of this setting.
   allow-edit: false
-  title: "<dark_gray>Ender Chest: </dark_gray><white>{player}</white>"
 
 sitting:
   # Right-click a slab or stair to sit down.

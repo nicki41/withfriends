@@ -114,7 +114,7 @@ final class DeathChestManager {
         boolean needsDouble = items.size() > 27;
         Placement placement = findPlacement(deathLocation, needsDouble, Math.max(1, values.deathChestSearchRadius()));
         if (placement == null) {
-            player.sendMessage(values.message("messages.death-chest.no-space",
+            player.sendMessage(values.message("death-chest.no-space",
                     "<red>No free spot was found for a death chest - your items dropped instead.</red>", Map.of()));
             return;
         }
@@ -137,9 +137,9 @@ final class DeathChestManager {
 
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("coordinates", primary.getX() + " " + primary.getY() + " " + primary.getZ());
-        placeholders.put("dimension", friendlyWorldName(primary.getWorld()));
-        player.sendMessage(values.message("messages.death-chest.placed",
-                "<gray>[</gray><gold>⛃</gold><gray>]</gray> <gray>Your items were placed in a chest at </gray><yellow>{coordinates}</yellow> <dark_gray>({dimension})</dark_gray>",
+        placeholders.put("world", worldTagText(primary.getWorld()));
+        player.sendMessage(values.message("death-chest.placed",
+                "<gray>[</gray><gold>⛃</gold><gray>]</gray> <gray>Your items were placed in a chest at </gray><yellow>{coordinates}</yellow> {world}",
                 placeholders, false));
     }
 
@@ -160,7 +160,7 @@ final class DeathChestManager {
             return;
         }
         event.setCancelled(true);
-        player.sendMessage(plugin.configValues().message("messages.death-chest.locked",
+        player.sendMessage(plugin.configValues().message("death-chest.locked",
                 "<red>This death chest belongs to </red><white>{player}</white><red> - you may not open it.</red>",
                 Map.of("player", record.ownerName)));
     }
@@ -239,7 +239,7 @@ final class DeathChestManager {
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("coordinates", record.x + " " + record.y + " " + record.z);
         placeholders.put("seconds", String.valueOf(warnSeconds));
-        owner.sendMessage(plugin.configValues().message("messages.death-chest.expire-warning",
+        owner.sendMessage(plugin.configValues().message("death-chest.expire-warning",
                 "<gray>[</gray><gold>⛃</gold><gray>]</gray> <gray>Your death chest at </gray><yellow>{coordinates}</yellow><gray> will expire in </gray><yellow>{seconds}s</yellow><gray>!</gray>",
                 placeholders, false));
     }
@@ -278,7 +278,7 @@ final class DeathChestManager {
         }
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("coordinates", record.x + " " + record.y + " " + record.z);
-        owner.sendMessage(plugin.configValues().message("messages.death-chest.expired",
+        owner.sendMessage(plugin.configValues().message("death-chest.expired",
                 "<gray>[</gray><gold>⛃</gold><gray>]</gray> <gray>Your death chest at </gray><yellow>{coordinates}</yellow><gray> expired, its items dropped on the ground.</gray>",
                 placeholders, false));
     }
@@ -441,12 +441,8 @@ final class DeathChestManager {
         return BlockFace.SOUTH;
     }
 
-    private String friendlyWorldName(World world) {
-        return switch (world.getEnvironment()) {
-            case NETHER -> "Nether";
-            case THE_END -> "End";
-            default -> "Overworld";
-        };
+    private String worldTagText(World world) {
+        return plugin.configValues().worldTagText(plugin.worldKey(world), world.getName());
     }
 
     private String key(Location location) {

@@ -1,6 +1,11 @@
 package de.withfriends;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -26,6 +31,8 @@ import org.bukkit.block.data.type.Stairs;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -121,11 +128,45 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
 
     private void reloadWithFriends() {
         reloadConfig();
-        configValues = ConfigValues.from(getConfig());
+        FileConfiguration lang = loadLanguage(resolveLanguage());
+        configValues = ConfigValues.from(getConfig(), lang);
         setupScoreboard();
         restartTablistTask();
         updateAllTabNames();
         updateAllDeathScores();
+        syncAfkCollidable();
+    }
+
+    private String resolveLanguage() {
+        String language = getConfig().getString("general.language", "en").toLowerCase(Locale.ROOT);
+        return language.equals("de") ? "de" : "en";
+    }
+
+    private FileConfiguration loadLanguage(String code) {
+        File file = new File(getDataFolder(), "lang/" + code + ".yml");
+        if (!file.exists()) {
+            saveResource("lang/" + code + ".yml", false);
+        }
+        YamlConfiguration lang = YamlConfiguration.loadConfiguration(file);
+        try (InputStream stream = getResource("lang/" + code + ".yml")) {
+            if (stream != null) {
+                lang.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(stream, StandardCharsets.UTF_8)));
+            }
+        } catch (IOException ignored) {
+            // Fall back to whatever is already on disk if the bundled resource can't be read.
+        }
+        return lang;
+    }
+
+    /**
+     * Keeps every online player's collision flag in sync with the current AFK/collision-immunity
+     * settings, e.g. right after a config reload changes them.
+     */
+    private void syncAfkCollidable() {
+        boolean immunityEnabled = configValues.enabled("afk") && configValues.afkCollisionImmunity();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.setCollidable(!(immunityEnabled && isAfk(player)));
+        }
     }
 
     private void setupScoreboard() {
@@ -226,7 +267,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
     private void updateTabName(Player player) {
         Component name = Component.text(player.getName());
         if (configValues.tablistWorldPrefixEnabled()) {
-            name = configValues.worldPrefix(worldKey(player.getWorld()), player.getWorld().getName()).append(name);
+            name = configValues.worldTag(worldKey(player.getWorld()), player.getWorld().getName()).append(name);
         }
         if (configValues.enabled("afk") && isAfk(player)) {
             name = name.append(configValues.afkSuffix());
@@ -234,7 +275,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         player.playerListName(name);
     }
 
-    private String worldKey(World world) {
+    String worldKey(World world) {
         return switch (world.getEnvironment()) {
             case NETHER -> "nether";
             case THE_END -> "end";
@@ -292,7 +333,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
                 placeholders.put("deaths", String.valueOf(deaths));
                 placeholders.put("location", deathLocationSuffix(placeholders));
                 String messagePath = getConfig().getString("death-messages.scope", "server").equalsIgnoreCase("player")
-                        ? "messages.death.player" : "messages.death.server";
+                        ? "death.player" : "death.server";
                 Component message = configValues.message(messagePath,
                         "<gray>[</gray><red>✖</red><gray>]</gray> <white>{player}</white><gray> died.</gray>{location}",
                         placeholders, false)
@@ -356,10 +397,10 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
                 resetPhantoms(world);
                 playSleepAnimation(world);
                 if (configValues.announceSleepSuccess()) {
-                    world.sendMessage(configValues.message("messages.sleep.skipped", "<gold>Good morning!</gold>", Map.of(), true));
+                    world.sendMessage(configValues.message("sleep.skipped", "<gold>Good morning!</gold>", Map.of(), true));
                 }
             } else if (configValues.announceSleepProgress()) {
-                world.sendMessage(configValues.message("messages.sleep.progress",
+                world.sendMessage(configValues.message("sleep.progress",
                         "<yellow>{sleeping}/{required}</yellow> <gray>players are sleeping. </gray><yellow>{remaining}</yellow><gray> remaining.</gray>",
                         Map.of("sleeping", String.valueOf(sleeping), "required", String.valueOf(required),
                                 "remaining", String.valueOf(Math.max(0, required - sleeping))), true));
@@ -533,10 +574,13 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
     private void setAfk(Player player, boolean afk) {
         afkPlayers.put(player.getUniqueId(), afk);
         updateTabName(player);
+        if (configValues.enabled("afk") && configValues.afkCollisionImmunity()) {
+            player.setCollidable(!afk);
+        }
         if (!configValues.afkAnnouncements()) {
             return;
         }
-        String path = afk ? "messages.afk.now" : "messages.afk.back";
+        String path = afk ? "afk.now" : "afk.back";
         String fallback = afk ? "<gray>{player} is now AFK.</gray>" : "<gray>{player} is no longer AFK.</gray>";
         Bukkit.broadcast(configValues.message(path, fallback, Map.of("player", player.getName()), false));
     }
@@ -576,27 +620,35 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
 
     @EventHandler
     public void onEnderChestClick(InventoryClickEvent event) {
-        if (event.getView().getTopInventory().getHolder() instanceof EnderChestViewer && !configValues.enderChestEditable()) {
+        if (event.getView().getTopInventory().getHolder() instanceof EnderChestViewer viewer && !canEditEnderChest(viewer)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onEnderChestDrag(InventoryDragEvent event) {
-        if (event.getView().getTopInventory().getHolder() instanceof EnderChestViewer && !configValues.enderChestEditable()) {
+        if (event.getView().getTopInventory().getHolder() instanceof EnderChestViewer viewer && !canEditEnderChest(viewer)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onEnderChestClose(InventoryCloseEvent event) {
-        if (!(event.getInventory().getHolder() instanceof EnderChestViewer viewer) || !configValues.enderChestEditable()) {
+        if (!(event.getInventory().getHolder() instanceof EnderChestViewer viewer) || !canEditEnderChest(viewer)) {
             return;
         }
         Player owner = Bukkit.getPlayer(viewer.ownerId());
         if (owner != null) {
             owner.getEnderChest().setContents(event.getInventory().getContents());
         }
+    }
+
+    /**
+     * Someone else's Ender Chest is always read-only, no matter the "allow-edit" setting - only a
+     * player's own chest can be edited, and only when that setting allows it.
+     */
+    private boolean canEditEnderChest(EnderChestViewer viewer) {
+        return viewer.selfView() && configValues.enderChestEditable();
     }
 
     @EventHandler
@@ -622,24 +674,24 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
             case "coords" -> handleCoords(sender, args);
             case "distance" -> handleDistance(sender, args);
             case "msg" -> handleMessage(sender, args);
-            case "enderchest" -> handleEnderChest(sender);
+            case "enderchest" -> handleEnderChest(sender, args);
             default -> false;
         };
     }
 
     private boolean handleAdminCommand(CommandSender sender, String label, String[] args) {
         if (!sender.hasPermission(ADMIN_PERMISSION)) {
-            sender.sendMessage(configValues.message("messages.no-permission", "<red>You do not have permission to do that.</red>", Map.of()));
+            sender.sendMessage(configValues.message("no-permission", "<red>You do not have permission to do that.</red>", Map.of()));
             return true;
         }
         if (args.length == 0 || args[0].equalsIgnoreCase("status")) {
-            sender.sendMessage(configValues.message("messages.status", "<gray>Online:</gray> <white>{online}</white> <gray>| Sleep mode:</gray> <white>{mode}</white>",
+            sender.sendMessage(configValues.message("status", "<gray>Online:</gray> <white>{online}</white> <gray>| Sleep mode:</gray> <white>{mode}</white>",
                     Map.of("online", String.valueOf(Bukkit.getOnlinePlayers().size()), "mode", configValues.sleepMode())));
             return true;
         }
         if (args[0].equalsIgnoreCase("reload")) {
             reloadWithFriends();
-            sender.sendMessage(configValues.message("messages.reload", "<green>Config reloaded.</green>", Map.of()));
+            sender.sendMessage(configValues.message("reload", "<green>Config reloaded.</green>", Map.of()));
             return true;
         }
         sender.sendMessage(Component.text("Use /" + label + " reload or /" + label + " status."));
@@ -652,7 +704,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         }
         Player target = args.length == 0 && sender instanceof Player player ? player : findOnline(args.length == 0 ? "" : args[0]);
         if (target != null) {
-            sender.sendMessage(configValues.message("messages.playtime", "<gray>{player}'s playtime:</gray> <white>{playtime}</white>",
+            sender.sendMessage(configValues.message("playtime", "<gray>{player}'s playtime:</gray> <white>{playtime}</white>",
                     Map.of("player", target.getName(), "playtime", formatDuration(playerData.playtimeSeconds(target.getUniqueId())))));
             return true;
         }
@@ -660,7 +712,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         if (data == null) {
             return playerNotFound(sender, args.length == 0 ? "player" : args[0]);
         }
-        sender.sendMessage(configValues.message("messages.playtime", "<gray>{player}'s playtime:</gray> <white>{playtime}</white>",
+        sender.sendMessage(configValues.message("playtime", "<gray>{player}'s playtime:</gray> <white>{playtime}</white>",
                 Map.of("player", data.name, "playtime", formatDuration(data.playtimeSeconds))));
         return true;
     }
@@ -675,7 +727,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         }
         Player online = findOnline(args[0]);
         if (online != null) {
-            sender.sendMessage(configValues.message("messages.seen-online", "<white>{player}</white><gray> is online right now.</gray>", Map.of("player", online.getName())));
+            sender.sendMessage(configValues.message("seen-online", "<white>{player}</white><gray> is online right now.</gray>", Map.of("player", online.getName())));
             return true;
         }
         PlayerDataStore.PlayerRecord data = playerData.findByName(args[0]).orElse(null);
@@ -683,7 +735,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
             return playerNotFound(sender, args[0]);
         }
         String lastSeen = data.lastSeen == null ? "unknown" : formatInstant(data.lastSeen);
-        sender.sendMessage(configValues.message("messages.seen", "<white>{player}</white><gray> was last seen:</gray> <white>{last-seen}</white>",
+        sender.sendMessage(configValues.message("seen", "<white>{player}</white><gray> was last seen:</gray> <white>{last-seen}</white>",
                 Map.of("player", data.name, "last-seen", lastSeen)));
         return true;
     }
@@ -698,7 +750,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         }
         Map<String, String> placeholders = locationPlaceholders(player.getLocation());
         placeholders.put("player", player.getName());
-        Component coordinates = configValues.message("messages.coords", "<gray>[</gray><aqua>⌖</aqua><gray>]</gray> <white>{player}</white><gray>: </gray><yellow>{coordinates}</yellow> <dark_gray>({dimension})</dark_gray>",
+        Component coordinates = configValues.message("coords", "<gray>[</gray><aqua>⌖</aqua><gray>]</gray> <white>{player}</white><gray>: </gray><yellow>{coordinates}</yellow> {world}",
                 placeholders, false).clickEvent(ClickEvent.copyToClipboard(placeholders.get("coordinates")))
                 .hoverEvent(HoverEvent.showText(Component.text("Click to copy coordinates")));
         if (args.length == 0) {
@@ -710,7 +762,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
             return playerNotFound(sender, args[0]);
         }
         target.sendMessage(coordinates);
-        sender.sendMessage(configValues.message("messages.coords-sent", "<gray>Coordinates sent to </gray><white>{player}</white><gray>.</gray>",
+        sender.sendMessage(configValues.message("coords-sent", "<gray>Coordinates sent to </gray><white>{player}</white><gray>.</gray>",
                 Map.of("player", target.getName())));
         return true;
     }
@@ -732,12 +784,12 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
             return playerNotFound(sender, args[0]);
         }
         if (!target.getWorld().equals(player.getWorld())) {
-            sender.sendMessage(configValues.message("messages.distance-different-world", "<white>{player}</white><gray> is in another dimension.</gray>",
+            sender.sendMessage(configValues.message("distance-different-world", "<white>{player}</white><gray> is in another dimension.</gray>",
                     Map.of("player", target.getName())));
             return true;
         }
         int distance = (int) Math.round(player.getLocation().distance(target.getLocation()));
-        sender.sendMessage(configValues.message("messages.distance", "<gray>Distance to </gray><white>{player}</white><gray>:</gray> <yellow>{distance} blocks</yellow>",
+        sender.sendMessage(configValues.message("distance", "<gray>Distance to </gray><white>{player}</white><gray>:</gray> <yellow>{distance} blocks</yellow>",
                 Map.of("player", target.getName(), "distance", String.valueOf(distance))));
         return true;
     }
@@ -759,14 +811,25 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
             return playerNotFound(sender, args[0]);
         }
         Component content = Component.text(String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)));
-        target.sendMessage(configValues.message("messages.msg-to", "<gray>[</gray><light_purple>msg</light_purple><gray>]</gray> <white>{player}</white><dark_gray>:</dark_gray> ",
-                Map.of("player", player.getName()), false).append(content));
-        player.sendMessage(configValues.message("messages.msg-from", "<gray>[</gray><light_purple>msg</light_purple><gray>]</gray> <gray>to </gray><white>{player}</white><dark_gray>:</dark_gray> ",
-                Map.of("player", target.getName()), false).append(content));
+        Map<String, String> placeholders = Map.of(
+                "world", worldTagText(player.getWorld()),
+                "sender", player.getName(),
+                "recipient", target.getName()
+        );
+        // Shown identically to both sides: [world] [sender -> recipient] "message" - same world tag
+        // style as the tab list, chat and /coords.
+        Component full = configValues.message("msg",
+                "{world}<gray>[</gray><white>{sender}</white><gray> -> </gray><white>{recipient}</white><gray>]</gray> ",
+                placeholders, false)
+                .append(Component.text("\""))
+                .append(content)
+                .append(Component.text("\""));
+        target.sendMessage(full);
+        player.sendMessage(full);
         return true;
     }
 
-    private boolean handleEnderChest(CommandSender sender) {
+    private boolean handleEnderChest(CommandSender sender, String[] args) {
         if (!configValues.enabled("enderchest")) {
             return commandDisabled(sender);
         }
@@ -774,8 +837,14 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
             sender.sendMessage(Component.text("This command can only be used by players."));
             return true;
         }
-        Inventory inventory = Bukkit.createInventory(new EnderChestViewer(player.getUniqueId()), player.getEnderChest().getSize(), configValues.enderChestTitle(player));
-        inventory.setContents(player.getEnderChest().getContents());
+        Player target = args.length == 0 ? player : findOnline(args[0]);
+        if (target == null) {
+            return playerNotFound(sender, args[0]);
+        }
+        boolean selfView = target.getUniqueId().equals(player.getUniqueId());
+        Inventory inventory = Bukkit.createInventory(new EnderChestViewer(target.getUniqueId(), selfView),
+                target.getEnderChest().getSize(), configValues.enderChestTitle(target));
+        inventory.setContents(target.getEnderChest().getContents());
         player.openInventory(inventory);
         return true;
     }
@@ -791,7 +860,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
             online += " +" + (onlinePlayers.size() - maxNames);
         }
         if (configValues.joinSummaryOnline()) {
-            player.sendMessage(configValues.message("messages.join-summary.online", "<gray>Online </gray><white>{count}</white><gray>:</gray> <white>{players}</white>",
+            player.sendMessage(configValues.message("join-summary.online", "<gray>Online </gray><white>{count}</white><gray>:</gray> <white>{players}</white>",
                     Map.of("count", String.valueOf(Bukkit.getOnlinePlayers().size()), "players", online), false));
         }
         long time = player.getWorld().getTime();
@@ -799,11 +868,11 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         int minute = (int) ((time % 1000) * 60 / 1000);
         long day = player.getWorld().getFullTime() / 24000 + 1;
         if (configValues.joinSummaryTime()) {
-            player.sendMessage(configValues.message("messages.join-summary.time", "<gray>Day </gray><white>{day}</white><gray>, </gray><white>{time}</white>",
+            player.sendMessage(configValues.message("join-summary.time", "<gray>Day </gray><white>{day}</white><gray>, </gray><white>{time}</white>",
                     Map.of("day", String.valueOf(day), "time", String.format(Locale.ROOT, "%02d:%02d", hour, minute)), false));
         }
         if (configValues.joinSummaryDeaths()) {
-            player.sendMessage(configValues.message("messages.join-summary.deaths", "<gray>Deaths:</gray> <white>{deaths}</white>",
+            player.sendMessage(configValues.message("join-summary.deaths", "<gray>Deaths:</gray> <white>{deaths}</white>",
                     Map.of("deaths", String.valueOf(playerData.deaths(player.getUniqueId()))), false));
         }
     }
@@ -815,13 +884,14 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         values.put("y", String.valueOf(location.getBlockY()));
         values.put("z", String.valueOf(location.getBlockZ()));
         values.put("dimension", friendlyWorldName(location.getWorld()));
+        values.put("world", worldTagText(location.getWorld()));
         return values;
     }
 
     private String deathLocationSuffix(Map<String, String> placeholders) {
         String suffix = "";
         if (configValues.deathShowDimension()) {
-            suffix += " <gray>in </gray><white>" + placeholders.get("dimension") + "</white>";
+            suffix += " <gray>in </gray>" + placeholders.get("world");
         }
         if (configValues.deathShowCoordinates()) {
             suffix += " <gray>at </gray><yellow>" + placeholders.get("coordinates") + "</yellow>";
@@ -830,11 +900,12 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
     }
 
     private String friendlyWorldName(World world) {
-        return switch (world.getEnvironment()) {
-            case NETHER -> "Nether";
-            case THE_END -> "End";
-            default -> "Overworld";
-        };
+        return configValues.worldLabel(worldKey(world), world.getName());
+    }
+
+    /** Raw, unparsed MiniMessage text for the colored world tag - see {@link ConfigValues#worldTagText}. */
+    private String worldTagText(World world) {
+        return configValues.worldTagText(worldKey(world), world.getName());
     }
 
     private String formatDuration(long seconds) {
@@ -856,12 +927,12 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
     }
 
     private boolean commandDisabled(CommandSender sender) {
-        sender.sendMessage(configValues.message("messages.command-disabled", "<red>This feature is currently disabled.</red>", Map.of()));
+        sender.sendMessage(configValues.message("command-disabled", "<red>This feature is currently disabled.</red>", Map.of()));
         return true;
     }
 
     private boolean playerNotFound(CommandSender sender, String name) {
-        sender.sendMessage(configValues.message("messages.player-not-found", "<red>Player </red><white>{player}</white><red> was not found.</red>", Map.of("player", name)));
+        sender.sendMessage(configValues.message("player-not-found", "<red>Player </red><white>{player}</white><red> was not found.</red>", Map.of("player", name)));
         return true;
     }
 
@@ -880,7 +951,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
                     ? java.util.List.of("reload", "status").stream().filter(value -> value.startsWith(args[0].toLowerCase(Locale.ROOT))).toList()
                     : java.util.List.of();
         }
-        if (args.length == 1 && java.util.Set.of("playtime", "seen", "coords", "distance", "msg").contains(command.getName().toLowerCase(Locale.ROOT))) {
+        if (args.length == 1 && java.util.Set.of("playtime", "seen", "coords", "distance", "msg", "enderchest").contains(command.getName().toLowerCase(Locale.ROOT))) {
             return Bukkit.getOnlinePlayers().stream().map(Player::getName)
                     .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT))).sorted().toList();
         }

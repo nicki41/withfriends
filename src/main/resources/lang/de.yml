@@ -1,0 +1,70 @@
+# ============================================================================
+# withfriends Sprachdatei (Deutsch)
+# Der gesamte Text verwendet MiniMessage-Formatierung: https://docs.advntr.dev/minimessage/format.html
+# Diese Datei wird mit general.language: de in der config.yml ausgewaehlt
+# ============================================================================
+
+prefix: "<gray>[<green>withfriends</green>]</gray> "
+
+join:
+  text: "<gray>[</gray><green>+</green><gray>]</gray> <white>{player}"
+
+leave:
+  text: "<gray>[</gray><red>-</red><gray>]</gray> <white>{player}"
+
+join-summary:
+  online: "<gray>Online:</gray> <white>{count} ({players})</white>"
+  time: "<gray>Tag:</gray> <white>{day}, {time}</white>"
+  deaths: "<gray>Tode:</gray> <white>{deaths}</white>"
+
+death:
+  server: "<white>{player}</white><gray> ist gestorben</gray>{location}"
+  player: "<gray>Du bist gestorben.</gray>{location}"
+
+sleep:
+  progress: "<white>{sleeping}/{required}</white><gray> Spieler schlafen. </gray><white>{remaining}</white><gray> fehlen noch.</gray>"
+  skipped: "<gray>Guten Morgen! Die Nacht wurde uebersprungen.</gray>"
+
+afk:
+  now: "<white>{player}</white><gray> ist jetzt AFK.</gray>"
+  back: "<white>{player}</white><gray> ist wieder da.</gray>"
+  tab-suffix: " <gray>[AFK]</gray>"
+
+playtime: "<gray>Spielzeit von </gray><white>{player}</white><gray>:</gray> <white>{playtime}</white>"
+seen: "<white>{player}</white><gray> war zuletzt online:</gray> <white>{last-seen}</white>"
+seen-online: "<white>{player}</white><gray> ist gerade online.</gray>"
+coords: "<white>{player}</white><gray>:</gray> <white>{coordinates}</white> {world}"
+coords-sent: "<gray>Koordinaten gesendet an </gray><white>{player}</white><gray>.</gray>"
+distance: "<gray>Entfernung zu </gray><white>{player}</white><gray>:</gray> <white>{distance} Bloecke</white>"
+distance-different-world: "<white>{player}</white><gray> ist in einer anderen Dimension.</gray>"
+
+# Wird dem Sender und dem Empfaenger eines /msg identisch angezeigt. {world} nutzt denselben
+# farbigen Tag wie Tabliste, Chat und /coords.
+msg: "{world}<gray>[</gray><white>{sender}</white><gray> -> </gray><white>{recipient}</white><gray>]</gray> "
+
+command-disabled: "<red>Diese Funktion ist derzeit deaktiviert.</red>"
+player-not-found: "<gray>Spieler </gray><white>{player}</white><gray> wurde nicht gefunden.</gray>"
+reload: "<green>Konfiguration neu geladen.</green>"
+no-permission: "<red>Du hast keine Berechtigung dafuer.</red>"
+status: "<gray>Online:</gray> <white>{online}</white> <dark_gray>|</dark_gray> <gray>Schlaf-Modus:</gray> <white>{mode}</white>"
+
+death-chest:
+  placed: "<gray>Deine Items wurden in eine Truhe bei </gray><white>{coordinates}</white> {world}<gray> gelegt.</gray>"
+  expired: "<gray>Deine Todes-Truhe bei </gray><white>{coordinates}</white><gray> ist abgelaufen, die Items wurden auf dem Boden verstreut.</gray>"
+  expire-warning: "<gray>Deine Todes-Truhe bei </gray><white>{coordinates}</white><gray> laeuft in </gray><white>{seconds}s</white><gray> ab!</gray>"
+  no-space: "<red>Es wurde kein freier Platz fuer eine Todes-Truhe gefunden - deine Items sind stattdessen gedroppt.</red>"
+  locked: "<red>Diese Todes-Truhe gehoert </red><white>{player}</white><red> - du darfst sie nicht oeffnen.</red>"
+
+deaths:
+  display-name: "<gray>Tode</gray>"
+
+enderchest:
+  title: "<dark_gray>Endertruhe: </dark_gray><white>{player}</white>"
+
+chat:
+  player-hover: "<gray>Tode:</gray> <white>{deaths}</white><newline><gray>Spielzeit:</gray> <white>{playtime}</white>"
+
+worlds:
+  overworld: "Oberwelt"
+  nether: "Nether"
+  end: "Das Ende"

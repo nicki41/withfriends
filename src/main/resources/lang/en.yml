@@ -1,0 +1,70 @@
+# ============================================================================
+# withfriends language file (English)
+# All text uses MiniMessage formatting: https://docs.advntr.dev/minimessage/format.html
+# Select this file with general.language: en in config.yml
+# ============================================================================
+
+prefix: "<gray>[<green>withfriends</green>]</gray> "
+
+join:
+  text: "<gray>[</gray><green>+</green><gray>]</gray> <white>{player}"
+
+leave:
+  text: "<gray>[</gray><red>-</red><gray>]</gray> <white>{player}"
+
+join-summary:
+  online: "<gray>Online:</gray> <white>{count} ({players})</white>"
+  time: "<gray>Day:</gray> <white>{day}, {time}</white>"
+  deaths: "<gray>Deaths:</gray> <white>{deaths}</white>"
+
+death:
+  server: "<white>{player}</white><gray> died</gray>{location}"
+  player: "<gray>You died.</gray>{location}"
+
+sleep:
+  progress: "<white>{sleeping}/{required}</white><gray> players are sleeping. </gray><white>{remaining}</white><gray> remaining.</gray>"
+  skipped: "<gray>Good morning! The night has been skipped.</gray>"
+
+afk:
+  now: "<white>{player}</white><gray> is now AFK.</gray>"
+  back: "<white>{player}</white><gray> is back.</gray>"
+  tab-suffix: " <gray>[AFK]</gray>"
+
+playtime: "<gray>Playtime of </gray><white>{player}</white><gray>:</gray> <white>{playtime}</white>"
+seen: "<white>{player}</white><gray> was last seen:</gray> <white>{last-seen}</white>"
+seen-online: "<white>{player}</white><gray> is online right now.</gray>"
+coords: "<white>{player}</white><gray>:</gray> <white>{coordinates}</white> {world}"
+coords-sent: "<gray>Coordinates sent to </gray><white>{player}</white><gray>.</gray>"
+distance: "<gray>Distance to </gray><white>{player}</white><gray>:</gray> <white>{distance} blocks</white>"
+distance-different-world: "<white>{player}</white><gray> is in another dimension.</gray>"
+
+# Shown identically to both the sender and the recipient of a /msg. {world} uses the same colored
+# tag as the tab list, chat and /coords.
+msg: "{world}<gray>[</gray><white>{sender}</white><gray> -> </gray><white>{recipient}</white><gray>]</gray> "
+
+command-disabled: "<red>This feature is currently disabled.</red>"
+player-not-found: "<gray>Player </gray><white>{player}</white><gray> was not found.</gray>"
+reload: "<green>Config reloaded.</green>"
+no-permission: "<red>You do not have permission to do that.</red>"
+status: "<gray>Online:</gray> <white>{online}</white> <dark_gray>|</dark_gray> <gray>Sleep mode:</gray> <white>{mode}</white>"
+
+death-chest:
+  placed: "<gray>Your items were placed in a chest at </gray><white>{coordinates}</white> {world}"
+  expired: "<gray>Your death chest at </gray><white>{coordinates}</white><gray> expired, its items dropped on the ground.</gray>"
+  expire-warning: "<gray>Your death chest at </gray><white>{coordinates}</white><gray> will expire in </gray><white>{seconds}s</white><gray>!</gray>"
+  no-space: "<red>No free spot was found for a death chest - your items dropped instead.</red>"
+  locked: "<red>This death chest belongs to </red><white>{player}</white><red> - you may not open it.</red>"
+
+deaths:
+  display-name: "<gray>Deaths</gray>"
+
+enderchest:
+  title: "<dark_gray>Ender Chest: </dark_gray><white>{player}</white>"
+
+chat:
+  player-hover: "<gray>Deaths:</gray> <white>{deaths}</white><newline><gray>Playtime:</gray> <white>{playtime}</white>"
+
+worlds:
+  overworld: "Overworld"
+  nether: "Nether"
+  end: "End"

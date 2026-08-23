@@ -1,5 +1,5 @@
 name: withfriends
-version: '1.0.1'
+version: '1.0.2'
 main: de.withfriends.WithFriendsPlugin
 description: Join/Leave, Tablist, Nametag-Hearts und Sleep-Vote fuer Paper.
 author: Nicki
@@ -26,8 +26,8 @@ commands:
     usage: /msg <player> <message>
     aliases: [tell, whisper]
   enderchest:
-    description: Open your Ender Chest.
-    usage: /enderchest
+    description: Open your own or another player's Ender Chest (read-only for others).
+    usage: /enderchest [player]
     aliases: [ec]
 permissions:
   withfriends.admin:

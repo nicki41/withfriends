@@ -4,7 +4,7 @@
 
 **withfriends** is a lightweight and fully configurable quality-of-life plugin designed for small and community-focused Minecraft servers. It enhances Minecraft with useful social features, clear player information, a flexible sleep system, and many other convenient additions.
 
-Every module can be enabled or disabled independently in the `config.yml`.
+Every module can be enabled or disabled independently in the `config.yml`. All text is fully translatable and ships with **English and German** out of the box - switch with a single setting.
 
 ## ✨ Features
 
@@ -23,7 +23,7 @@ Every module can be enabled or disabled independently in the `config.yml`.
 
 ### Communication and Coordinates
 
-* Formatted private messages using `/msg`
+* Private messages via `/msg`, shown identically to both sides as `[world] [sender -> recipient] "message"`
 * View your own or another player's playtime with `/playtime`
 * Check when a player was last online with `/seen`
 * Broadcast your coordinates or send them privately
@@ -31,6 +31,7 @@ Every module can be enabled or disabled independently in the `config.yml`.
 * Optional chat formatting with world prefixes
 * Hover information for deaths and playtime
 * Clickable coordinates in death messages with clipboard support
+* One consistent, colored world tag (e.g. a green "[Overworld]") used everywhere a world is shown: tab list, chat, `/coords`, `/msg`, and death messages
 
 ### AFK System
 
@@ -40,6 +41,7 @@ AFK players are automatically detected and can be:
 * excluded from sleep votes
 * protected from damage
 * protected from knockback
+* protected from being pushed around by mob or player collision
 
 ### Flexible Sleep System
 
@@ -61,8 +63,8 @@ AFK players are automatically detected and can be:
 ### Additional Quality-of-Life Features
 
 * Sit on slabs and stairs with an empty hand
-* Open your Ender Chest with `/enderchest` or `/ec`
-* Configure the Ender Chest as read-only or editable
+* Open your own Ender Chest with `/enderchest` or `/ec`, or peek into another player's - always read-only for anyone but the owner
+* Configure your own Ender Chest as read-only or editable
 * Fully customizable text formatting using [MiniMessage](https://docs.advntr.dev/minimessage/format.html)
 
 ## 📋 Commands
@@ -76,25 +78,26 @@ AFK players are automatically detected and can be:
 | `/coords [player]`        | Broadcasts coordinates or sends them privately       |
 | `/distance <player>`      | Shows the distance to a player in the same dimension |
 | `/msg <player> <message>` | Sends a formatted private message                    |
-| `/enderchest`             | Opens your Ender Chest                               |
-| `/ec`                     | Shortcut for `/enderchest`                           |
+| `/enderchest [player]`    | Opens your own or another player's Ender Chest (read-only for others) |
+| `/ec [player]`            | Shortcut for `/enderchest`                           |
 
 The `/withfriends reload` and `/withfriends status` commands require the `withfriends.admin` permission, which is granted to server operators by default.
 
 ## ⚙️ Configuration
 
-All features can be configured independently. The generated `config.yml` contains detailed comments and examples.
+All features can be configured independently. The generated `config.yml` contains detailed comments and examples. All display text lives separately in `plugins/withfriends/lang/en.yml` and `lang/de.yml`.
 
 Available settings include:
 
+* `general.language`: `en` or `de` - all text, both bundled languages fully translated
 * enabling or disabling individual modules
 * death count display location
 * death message visibility
 * death chest trigger (always / lava-only) and persistence (permanent / timed)
-* formatting for all plugin messages
-* Ender Chest editing permissions
+* the shared, colored world tags used everywhere a world is shown
+* Ender Chest editing permissions (your own chest only - viewing others is always read-only)
 * percentage-based or fixed sleep voting
-* AFK protection
+* AFK protection, including collision immunity
 * chat and player-list formatting
 
 After making changes, reload the configuration with `/withfriends reload`.
