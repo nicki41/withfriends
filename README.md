@@ -6,7 +6,7 @@
 
 Every module can be enabled or disabled independently in the `config.yml`. All text is fully translatable and ships with **English and German** out of the box - switch with a single setting.
 
-## ✨ Features
+## Features
 
 ### Player Information
 
@@ -67,7 +67,7 @@ AFK players are automatically detected and can be:
 * Configure your own Ender Chest as read-only or editable
 * Fully customizable text formatting using [MiniMessage](https://docs.advntr.dev/minimessage/format.html)
 
-## 📋 Commands
+## Commands
 
 | Command                   | Description                                          |
 | ------------------------- | ---------------------------------------------------- |
@@ -83,7 +83,7 @@ AFK players are automatically detected and can be:
 
 The `/withfriends reload` and `/withfriends status` commands require the `withfriends.admin` permission, which is granted to server operators by default.
 
-## ⚙️ Configuration
+## Configuration
 
 All features can be configured independently. The generated `config.yml` contains detailed comments and examples. All display text lives separately in `plugins/withfriends/lang/en.yml` and `lang/de.yml`.
 
@@ -102,7 +102,7 @@ Available settings include:
 
 After making changes, reload the configuration with `/withfriends reload`.
 
-## 📦 Installation
+## Installation
 
 1. Download the latest JAR file.
 2. Place it inside your server's `plugins` directory.
@@ -110,13 +110,13 @@ After making changes, reload the configuration with `/withfriends reload`.
 4. Adjust `plugins/withfriends/config.yml` if needed.
 5. Run `/withfriends reload` or restart the server again.
 
-## ✅ Requirements
+## Requirements
 
 * **Minecraft:** Java Edition 26.2
 * **Server software:** Paper
 * **Java:** 25
 
-## 💾 Player Data
+## Player Data
 
 Death counts, playtime, last join times, and last-seen timestamps are stored by UUID.
 
@@ -136,7 +136,7 @@ plugins/withfriends/deathchests.json
 
 so timed expiry and owner-only locks survive a server restart.
 
-## ⚠️ Compatibility
+## Compatibility
 
 Other plugins may already provide commands such as `/msg` or `/ec`. If a conflict occurs, use the namespaced command instead:
 
@@ -145,15 +145,15 @@ Other plugins may already provide commands such as `/msg` or `/ec`. If a conflic
 /withfriends:ec
 ```
 
-## 💡 Feature Requests
+## Feature Requests
 
 New ideas and feature requests are always very welcome! If you have a suggestion for improving **withfriends**, feel free to [open an issue](https://github.com/nicki41/withfriends/issues) and share it.
 
-## 🔗 Links
+## Links
 
 * [Source code on GitHub](https://github.com/nicki41/withfriends)
 * [Report an issue or suggest a feature](https://github.com/nicki41/withfriends/issues)
 
-## 📜 License
+## License
 
 **withfriends** is free and open-source software distributed under the [GNU General Public License v3.0](https://github.com/nicki41/withfriends/blob/master/LICENSE).
