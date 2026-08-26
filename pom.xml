@@ -41,6 +41,26 @@
 
     <build>
         <finalName>withfriends-${project.version}</finalName>
+        <resources>
+            <!-- plugin.yml's version placeholder is substituted from project.version so it's the
+                 one, single source of truth (see docs/release automation) - every other resource
+                 is copied as-is, unfiltered, so nothing in config.yml/lang can be misread as a
+                 Maven ${...} placeholder. -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>plugin.yml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>plugin.yml</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

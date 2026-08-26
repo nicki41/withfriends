@@ -1,0 +1,108 @@
+name: Release
+
+# Tag-driven releases: pushing a tag like v1.0.4 builds and - only if that
+# succeeds - publishes a GitHub Release with the plugin jar and its SHA-256
+# checksum. Nothing is published on an ordinary commit.
+#
+# Two ways to reach this workflow:
+# - Manually: push a tag yourself.
+# - Automatically: auto-release.yml pushes the version bump and the tag
+#   itself, then calls this workflow directly via `workflow_call` (not by
+#   relying on the tag push to trigger it - a push made with the default
+#   GITHUB_TOKEN deliberately does not cascade into other workflow runs, see
+#   auto-release.yml). Either path ends up here with the same build/publish
+#   steps.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_call:
+    inputs:
+      tag:
+        description: "Tag to build and release (e.g. v1.0.4) - set by auto-release.yml; unused on a direct tag push, where the triggering tag is used instead."
+        required: true
+        type: string
+
+# contents: write is required to create the release and upload its assets.
+# Nothing else is granted, and no secret beyond the automatic GITHUB_TOKEN is
+# used. For the workflow_call path, this is only the ceiling - the actual
+# grant is whatever the calling job's own `permissions:` allows.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve the tag to build
+        id: tag
+        run: echo "name=${{ inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.tag.outputs.name }}
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # Guard against publishing a mislabelled release: tag v1.1.0 must not
+      # ship a jar built from version 1.0.4. Runs before the build so a
+      # mismatch fails fast. Reads pom.xml's own <version> line directly
+      # (it's the only 4-space-indented one - every dependency/plugin
+      # <version> is nested deeper) rather than pulling in a Maven plugin
+      # just to print it.
+      - name: Verify tag matches the project version
+        id: version
+        run: |
+          set -euo pipefail
+          TAG_NAME="${{ steps.tag.outputs.name }}"
+          TAG_VERSION="${TAG_NAME#v}"
+          PROJECT_VERSION="$(grep -m1 -E '^    <version>' pom.xml | sed -E 's|.*<version>(.*)</version>.*|\1|')"
+          echo "Tag version:     $TAG_VERSION"
+          echo "Project version: $PROJECT_VERSION"
+          if [ "$TAG_VERSION" != "$PROJECT_VERSION" ]; then
+            echo "::error::Tag '$TAG_NAME' does not match the project version '$PROJECT_VERSION' in pom.xml."
+            exit 1
+          fi
+          echo "version=$PROJECT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: mvn -B package
+
+      # Exactly one installable artifact: the plugin jar.
+      - name: Locate release jar and create SHA-256 checksum
+        id: artifact
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          JAR="target/withfriends-${VERSION}.jar"
+          if [ ! -f "$JAR" ]; then
+            echo "::error::Expected release jar '$JAR' was not produced by the build."
+            ls -l target || true
+            exit 1
+          fi
+          ( cd target && sha256sum "withfriends-${VERSION}.jar" \
+              > "withfriends-${VERSION}.jar.sha256" )
+          cat "${JAR}.sha256"
+          echo "jar=$JAR" >> "$GITHUB_OUTPUT"
+          echo "checksum=${JAR}.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release create "${{ steps.tag.outputs.name }}" \
+            "${{ steps.artifact.outputs.jar }}" \
+            "${{ steps.artifact.outputs.checksum }}" \
+            --title "withfriends ${VERSION}" \
+            --generate-notes
