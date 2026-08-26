@@ -126,7 +126,14 @@ jobs:
           name: withfriends ${{ steps.version.outputs.version }}
           version: ${{ steps.version.outputs.version }}
           changelog: ${{ steps.github_release.outputs.body }}
-          loaders: paper
+          # Matches the loaders already declared on the existing manually
+          # uploaded versions (1.0.0-1.0.3) - kept consistent rather than
+          # narrowed unilaterally.
+          loaders: |
+            bukkit
+            paper
+            purpur
+            spigot
           # Only the currently pinned Paper API version is claimed - no
           # broader compatibility range has been decided/tested yet.
           game-versions: "26.2"
