@@ -96,6 +96,7 @@ jobs:
           echo "checksum=${JAR}.sha256" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub release
+        id: github_release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -106,3 +107,28 @@ jobs:
             "${{ steps.artifact.outputs.checksum }}" \
             --title "withfriends ${VERSION}" \
             --generate-notes
+          {
+            echo "body<<GH_RELEASE_BODY_EOF"
+            gh release view "${{ steps.tag.outputs.name }}" --json body -q .body
+            echo "GH_RELEASE_BODY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # Mirrors the same release onto the existing Modrinth project
+      # (id 3MKkkIu4). fail-mode: warn so a Modrinth-side hiccup doesn't mark
+      # the whole release as failed - the GitHub release above has already
+      # succeeded by this point.
+      - name: Publish to Modrinth
+        uses: Kira-NT/mc-publish@v3
+        with:
+          modrinth-id: 3MKkkIu4
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: target/withfriends-*.jar
+          name: withfriends ${{ steps.version.outputs.version }}
+          version: ${{ steps.version.outputs.version }}
+          changelog: ${{ steps.github_release.outputs.body }}
+          loaders: paper
+          # Only the currently pinned Paper API version is claimed - no
+          # broader compatibility range has been decided/tested yet.
+          game-versions: "26.2"
+          java: 25
+          fail-mode: warn
