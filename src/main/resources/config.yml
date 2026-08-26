@@ -10,6 +10,16 @@ general:
   # Language for all plugin messages. Available: en, de.
   language: en
 
+# Anonymous usage statistics: plugin id, a random installation id, plugin/
+# Minecraft/Java versions, and online/max player counts - nothing that
+# identifies this server. Sent to the official nicki41-telemetry instance,
+# which is fixed and not configurable here.
+telemetry:
+  # false switches statistics off completely - no request of any kind is
+  # made, no installation id is generated. Read again on every heartbeat,
+  # so a restart is only needed to turn it back on, not off.
+  enabled: true
+
 join:
   # Replace Minecraft's default join message.
   enabled: true

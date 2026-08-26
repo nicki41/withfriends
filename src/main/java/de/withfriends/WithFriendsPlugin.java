@@ -1,5 +1,6 @@
 package de.withfriends;
 
+import de.withfriends.telemetry.TelemetryReporter;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import java.io.File;
 import java.io.IOException;
@@ -79,6 +80,7 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
     private ConfigValues configValues;
     private PlayerDataStore playerData;
     private DeathChestManager deathChestManager;
+    private TelemetryReporter telemetry;
     private Scoreboard scoreboard;
     private BukkitTask tablistTask;
     private BukkitTask afkTask;
@@ -99,6 +101,8 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         Bukkit.getPluginManager().registerEvents(this, this);
         registerCommands();
         startAfkTask();
+        telemetry = new TelemetryReporter(this);
+        telemetry.start();
         getLogger().info("withfriends enabled.");
     }
 
@@ -109,6 +113,9 @@ public final class WithFriendsPlugin extends JavaPlugin implements Listener, Tab
         }
         if (afkTask != null) {
             afkTask.cancel();
+        }
+        if (telemetry != null) {
+            telemetry.stop();
         }
         seats.values().forEach(ArmorStand::remove);
         seats.clear();
