@@ -3,7 +3,7 @@ version: '${project.version}'
 main: de.withfriends.WithFriendsPlugin
 description: Join/Leave, Tablist, Nametag-Hearts und Sleep-Vote fuer Paper.
 author: Nicki
-api-version: '26.2'
+api-version: '26.3'
 commands:
   withfriends:
     description: withfriends Verwaltung

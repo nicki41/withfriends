@@ -112,7 +112,7 @@ After making changes, reload the configuration with `/withfriends reload`.
 
 ## Requirements
 
-* **Minecraft:** Java Edition 26.2
+* **Minecraft:** Java Edition 26.3
 * **Server software:** Paper
 * **Java:** 25
 
